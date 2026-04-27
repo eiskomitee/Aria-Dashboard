@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Aria Content Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf9f7;
+      --surface: #ffffff;
+      --border: #e8e4de;
+      --text: #1a1816;
+      --text-muted: #8a8178;
+      --accent: #c8a882;
+      --accent-dark: #a8845e;
+      --emerald: #2d9e6b;
+      --amber: #d4860a;
+      --rose: #c0424e;
+      --slate: #6b7280;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* HEADER */
+    .header {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 20px 12px;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .logo h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: -0.5px;
+    }
+    .logo h1 span { font-style: italic; color: var(--accent-dark); }
+    .logo p {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .btn-new {
+      background: var(--text);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-new:active { transform: scale(0.96); }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .tab {
+      padding: 7px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: white;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .tab.active {
+      background: var(--text);
+      color: white;
+      border-color: var(--text);
+    }
+
+    /* MAIN */
+    .main { max-width: 680px; margin: 0 auto; padding: 20px 16px 40px; }
+
+    /* STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stat-card:active { transform: scale(0.97); }
+    .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .stat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .stat-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      margin-top: 4px;
+    }
+    .stat-count {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 40px;
+      font-weight: 300;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .dot-green { background: var(--emerald); }
+    .dot-amber { background: var(--amber); }
+    .dot-rose { background: var(--rose); }
+    .dot-slate { background: var(--slate); }
+
+    /* TYPE STATS */
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .type-item {
+      text-align: center;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 14px 8px;
+    }
+    .type-emoji { font-size: 22px; margin-bottom: 4px; }
+    .type-count {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 300;
+    }
+    .type-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* RECENT GRID */
+    .recent-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .see-all {
+      font-size: 12px;
+      color: var(--accent-dark);
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .img-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .img-thumb {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .img-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .img-thumb:hover img { transform: scale(1.05); }
+    .img-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: flex-end;
+      padding: 8px;
+    }
+    .img-thumb:hover .img-thumb-overlay { opacity: 1; }
+    .img-thumb-overlay span {
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .status-dot-thumb {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid white;
+    }
+
+    /* EMPTY STATE */
+    .empty {
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .empty-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, #f5ede3, #fde8c8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+    }
+    .empty h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 400;
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+    .empty p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+    .btn-primary {
+      background: var(--text);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-primary:active { transform: scale(0.97); }
+
+    /* GALLERY VIEW */
+    .search-bar {
+      position: relative;
+      margin-bottom: 12px;
+    }
+    .search-bar input {
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-bar input:focus { border-color: var(--accent); }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .filters { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+    .filter-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .filter-row:last-child { margin-bottom: 0; }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .filter-btn.active { background: var(--text); color: white; border-color: var(--text); }
+
+    .results-count { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; padding: 0 2px; }
+
+    .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .gallery-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .gallery-card:active { transform: scale(0.98); }
+    .gallery-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .gallery-img {
+      position: relative;
+      aspect-ratio: 1;
+    }
+    .gallery-img img { width: 100%; height: 100%; object-fit: cover; }
+    .img-badges {
+      position: absolute;
+      top: 8px; left: 8px; right: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .badge-status {
+      padding: 4px 9px;
+      border-radius: 100px;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+      backdrop-filter: blur(6px);
+    }
+    .badge-type {
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(6px);
+      padding: 4px 8px;
+      border-radius: 100px;
+      font-size: 12px;
+    }
+    .gallery-info { padding: 10px 12px; }
+    .gallery-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gallery-cat { font-size: 11px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+
+    /* MODAL OVERLAY */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 540px;
+      border-radius: 24px 24px 0 0;
+      max-height: 92vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.25s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 12px auto 0;
+    }
+    .modal-header {
+      position: sticky;
+      top: 0;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .modal-header h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 400;
+    }
+    .btn-close {
+      width: 32px; height: 32px;
+      background: var(--bg);
+      border: none;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: background 0.15s;
+    }
+    .btn-close:hover { background: var(--border); }
+
+    .modal-body { padding: 20px; }
+
+    /* FORM */
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    textarea.form-input { resize: none; min-height: 90px; }
+
+    .upload-area {
+      aspect-ratio: 1;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: var(--bg);
+      transition: border-color 0.2s;
+    }
+    .upload-area:hover { border-color: var(--accent); }
+    .upload-area span:first-child { font-size: 36px; margin-bottom: 8px; }
+    .upload-area .upload-text { font-size: 14px; font-weight: 500; color: var(--text); }
+    .upload-area .upload-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .upload-area input { display: none; }
+
+    .preview-container {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .preview-container img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-remove-img {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 32px; height: 32px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .options-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .option-btn {
+      padding: 12px 8px;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .option-btn.selected { background: var(--text); color: white; border-color: var(--text); }
+    .option-btn .opt-emoji { font-size: 20px; display: block; margin-bottom: 4px; }
+
+    .btn-save {
+      width: 100%;
+      background: var(--text);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+    .btn-save:active { transform: scale(0.98); }
+
+    /* DETAIL MODAL */
+    .detail-img { aspect-ratio: 1; }
+    .detail-img img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-body { padding: 20px; }
+
+    .status-switcher { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .status-btn {
+      padding: 10px;
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .status-btn.active-green { background: var(--emerald); color: white; border-color: var(--emerald); }
+    .status-btn.active-amber { background: var(--amber); color: white; border-color: var(--amber); }
+    .status-btn.active-rose { background: var(--rose); color: white; border-color: var(--rose); }
+    .status-btn.active-slate { background: var(--slate); color: white; border-color: var(--slate); }
+
+    .info-block { background: var(--bg); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      padding: 5px 0;
+    }
+    .info-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+    .info-key { color: var(--text-muted); }
+    .info-val { font-weight: 500; }
+
+    .notes-block { background: var(--bg); border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 16px; }
+
+    .action-row { display: flex; gap: 8px; }
+    .btn-edit {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 13px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s;
+    }
+    .btn-edit:hover { background: var(--border); }
+    .btn-delete {
+      padding: 13px 16px;
+      background: #fff0f1;
+      border: 1px solid #ffd6d9;
+      color: var(--rose);
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-delete:hover { background: #ffd6d9; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--text);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 999;
+      transition: transform 0.3s;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (min-width: 600px) {
+      .modal { border-radius: 24px; margin-bottom: 40px; }
+      .modal-overlay { align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <h1>Aria <span>Content</span></h1>
+      <p>Content Manager</p>
+    </div>
+    <button class="btn-new" onclick="openAddModal()">
+      <span>＋</span> Neu
+    </button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchView('dashboard', this)">Übersicht</button>
+    <button class="tab" onclick="switchView('gallery', this)">Galerie</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- DASHBOARD -->
+  <div id="view-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card" onclick="goGallery('verfuegbar')">
+        <div class="stat-top">
+          <div class="stat-dot dot-green"></div>
+          <div class="stat-count" id="count-verfuegbar">0</div>
+        </div>
+        <div class="stat-label">Verfügbar</div>
+      </div>
+      <div class="stat-card" onclick="goGallery('geplant')">
+        <div class="stat-top">
+          <div class="stat-dot dot-amber"></div>
+          <div class="stat-count" id="count-geplant">0</div>
+        </div>
+        <div class="stat-label">Geplant</div>
+      </div>
+      <div class="stat-card" onclick="goGallery('gepostet')">
+        <div class="stat-top">
+          <div class="stat-dot dot-rose"></div>
+          <div class="stat-count" id="count-gepostet">0</div>
+        </div>
+        <div class="stat-label">Gepostet</div>
+      </div>
+      <div class="stat-card" onclick="goGallery('archiv')">
+        <div class="stat-top">
+          <div class="stat-dot dot-slate"></div>
+          <div class="stat-count" id="count-archiv">0</div>
+        </div>
+        <div class="stat-label">Archiv</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Nach Content-Typ</div>
+      <div class="type-grid">
+        <div class="type-item">
+          <div class="type-emoji">⚡</div>
+          <div class="type-count" id="count-story">0</div>
+          <div class="type-label">Story</div>
+        </div>
+        <div class="type-item">
+          <div class="type-emoji">🎬</div>
+          <div class="type-count" id="count-reel">0</div>
+          <div class="type-label">Reel</div>
+        </div>
+        <div class="type-item">
+          <div class="type-emoji">📷</div>
+          <div class="type-count" id="count-beitrag">0</div>
+          <div class="type-label">Beitrag</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="recent-card">
+      <div class="recent-header">
+        <div class="card-title" style="margin:0">Zuletzt hinzugefügt</div>
+        <button class="see-all" onclick="switchView('gallery', document.querySelectorAll('.tab')[1])">Alle →</button>
+      </div>
+      <div class="img-grid" id="recent-grid"></div>
+      <div id="empty-state" class="empty" style="display:none">
+        <div class="empty-icon">🖼️</div>
+        <h3>Noch keine Bilder</h3>
+        <p>Lade dein erstes Aria-Bild hoch</p>
+        <button class="btn-primary" onclick="openAddModal()">Erstes Bild hinzufügen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GALLERY -->
+  <div id="view-gallery" style="display:none">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Name, Kategorie, Notizen..." oninput="renderGallery()" id="search-input" />
+    </div>
+
+    <div class="filters">
+      <div class="filter-label">Status</div>
+      <div class="filter-row" id="filter-status">
+        <button class="filter-btn active" data-val="alle" onclick="setFilter('status','alle',this)">Alle</button>
+        <button class="filter-btn" data-val="verfuegbar" onclick="setFilter('status','verfuegbar',this)">Verfügbar</button>
+        <button class="filter-btn" data-val="geplant" onclick="setFilter('status','geplant',this)">Geplant</button>
+        <button class="filter-btn" data-val="gepostet" onclick="setFilter('status','gepostet',this)">Gepostet</button>
+        <button class="filter-btn" data-val="archiv" onclick="setFilter('status','archiv',this)">Archiv</button>
+      </div>
+      <div class="filter-label">Typ</div>
+      <div class="filter-row" id="filter-type">
+        <button class="filter-btn active" data-val="alle" onclick="setFilter('type','alle',this)">Alle</button>
+        <button class="filter-btn" data-val="story" onclick="setFilter('type','story',this)">⚡ Story</button>
+        <button class="filter-btn" data-val="reel" onclick="setFilter('type','reel',this)">🎬 Reel</button>
+        <button class="filter-btn" data-val="beitrag" onclick="setFilter('type','beitrag',this)">📷 Beitrag</button>
+      </div>
+      <div id="cat-filter-wrap" style="display:none">
+        <div class="filter-label">Kategorie</div>
+        <div class="filter-row" id="filter-cat"></div>
+      </div>
+    </div>
+
+    <div class="results-count" id="results-count"></div>
+    <div class="gallery-grid" id="gallery-grid"></div>
+    <div id="gallery-empty" class="empty" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <h3>Nichts gefunden</h3>
+      <p>Filter anpassen oder neues Bild hinzufügen</p>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="modal-title">Neues Bild</h2>
+      <button class="btn-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Image Upload -->
+      <div class="form-group">
+        <label class="form-label">Bild</label>
+        <div id="upload-area" class="upload-area" onclick="document.getElementById('file-input').click()">
+          <span>📤</span>
+          <span class="upload-text">Bild hochladen</span>
+          <span class="upload-hint">Aus deiner Galerie auswählen</span>
+          <input type="file" id="file-input" accept="image/*" onchange="handleUpload(event)" />
+        </div>
+        <div id="preview-area" class="preview-container" style="display:none">
+          <img id="preview-img" src="" alt="Vorschau" />
+          <button class="btn-remove-img" onclick="removeImage()">✕</button>
+        </div>
+      </div>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label class="form-label">Name *</label>
+        <input type="text" id="form-name" class="form-input" placeholder="z.B. Aria Café Morning" />
+      </div>
+
+      <!-- Type -->
+      <div class="form-group">
+        <label class="form-label">Content-Typ <span style="color:var(--text-muted);font-size:10px">(optional)</span></label>
+        <div class="options-grid-3">
+          <button class="option-btn" data-type="story" onclick="selectType('story')">
+            <span class="opt-emoji">⚡</span>Story
+          </button>
+          <button class="option-btn" data-type="reel" onclick="selectType('reel')">
+            <span class="opt-emoji">🎬</span>Reel
+          </button>
+          <button class="option-btn" data-type="beitrag" onclick="selectType('beitrag')">
+            <span class="opt-emoji">📷</span>Beitrag
+          </button>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label class="form-label">Kategorie <span style="color:var(--text-muted);font-size:10px">(optional)</span></label>
+        <input type="text" id="form-category" class="form-input" placeholder="z.B. Café, Travel, Skincare..." list="cat-list" />
+        <datalist id="cat-list"></datalist>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label class="form-label">Notizen <span style="color:var(--text-muted);font-size:10px">(optional)</span></label>
+        <textarea id="form-notes" class="form-input" placeholder="Caption-Idee, Hashtags, Datum..."></textarea>
+      </div>
+
+      <button class="btn-save" onclick="saveImage()" id="btn-save-text">Bild speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="detail-name" style="font-size:18px"></h2>
+      <button class="btn-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-img">
+      <img id="detail-img" src="" alt="" />
+    </div>
+    <div class="detail-body">
+      <div class="form-label" style="margin-bottom:8px">Status ändern</div>
+      <div class="status-switcher">
+        <button class="status-btn" data-s="verfuegbar" onclick="quickStatus('verfuegbar')">✨ Verfügbar</button>
+        <button class="status-btn" data-s="geplant" onclick="quickStatus('geplant')">⏳ Geplant</button>
+        <button class="status-btn" data-s="gepostet" onclick="quickStatus('gepostet')">✅ Gepostet</button>
+        <button class="status-btn" data-s="archiv" onclick="quickStatus('archiv')">📦 Archiv</button>
+      </div>
+
+      <div class="info-block" id="detail-info"></div>
+      <div id="detail-notes-wrap" style="display:none">
+        <div class="form-label" style="margin-bottom:6px">Notizen</div>
+        <div class="notes-block" id="detail-notes"></div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn-edit" onclick="editCurrent()">✏️ Bearbeiten</button>
+        <button class="btn-delete" onclick="deleteCurrent()">🗑️</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Storage Helpers ──────────────────────────────────────────
+  const PREFIX = 'aria_img_';
+
+  function saveToStorage(id, data) {
+    try { localStorage.setItem(PREFIX + id, JSON.stringify(data)); return true; }
+    catch(e) { return false; }
+  }
+
+  function loadFromStorage() {
+    const items = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith(PREFIX)) {
+        try { items.push(JSON.parse(localStorage.getItem(key))); } catch(e) {}
+      }
+    }
+    return items.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  function deleteFromStorage(id) {
+    localStorage.removeItem(PREFIX + id);
+  }
+
+  // ── State ────────────────────────────────────────────────────
+  let images = [];
+  let currentView = 'dashboard';
+  let filters = { status: 'alle', type: 'alle', cat: 'alle' };
+  let formData = { image: null, type: null, editing: null };
+  let currentDetailId = null;
+
+  const STATUS_CFG = {
+    verfuegbar: { label: 'Verfügbar', color: '#2d9e6b', cls: 'dot-green', activeCls: 'active-green' },
+    geplant:    { label: 'Geplant',   color: '#d4860a', cls: 'dot-amber', activeCls: 'active-amber' },
+    gepostet:   { label: 'Gepostet',  color: '#c0424e', cls: 'dot-rose',  activeCls: 'active-rose'  },
+    archiv:     { label: 'Archiv',    color: '#6b7280', cls: 'dot-slate', activeCls: 'active-slate' },
+  };
+  const TYPE_CFG = {
+    story:   { label: 'Story',   emoji: '⚡' },
+    reel:    { label: 'Reel',    emoji: '🎬' },
+    beitrag: { label: 'Beitrag', emoji: '📷' },
+  };
+
+  // ── Init ─────────────────────────────────────────────────────
+  function init() {
+    images = loadFromStorage();
+    renderDashboard();
+    renderGallery();
+    updateCatFilter();
+  }
+
+  // ── Views ────────────────────────────────────────────────────
+  function switchView(v, btn) {
+    currentView = v;
+    document.getElementById('view-dashboard').style.display = v === 'dashboard' ? '' : 'none';
+    document.getElementById('view-gallery').style.display   = v === 'gallery'   ? '' : 'none';
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    if (v === 'gallery') renderGallery();
+  }
+
+  function goGallery(status) {
+    setFilter('status', status, document.querySelector(`#filter-status [data-val="${status}"]`));
+    switchView('gallery', document.querySelectorAll('.tab')[1]);
+  }
+
+  // ── Dashboard ────────────────────────────────────────────────
+  function renderDashboard() {
+    ['verfuegbar','geplant','gepostet','archiv'].forEach(s => {
+      document.getElementById('count-' + s).textContent = images.filter(i => i.status === s).length;
+    });
+    ['story','reel','beitrag'].forEach(t => {
+      document.getElementById('count-' + t).textContent = images.filter(i => i.type === t).length;
+    });
+
+    const grid = document.getElementById('recent-grid');
+    const empty = document.getElementById('empty-state');
+    if (images.length === 0) {
+      grid.style.display = 'none';
+      empty.style.display = '';
+    } else {
+      grid.style.display = 'grid';
+      empty.style.display = 'none';
+      grid.innerHTML = images.slice(0,6).map(img => `
+        <div class="img-thumb" onclick="openDetail('${img.id}')">
+          <img src="${img.image}" alt="${img.name}" loading="lazy" />
+          <div class="img-thumb-overlay"><span>${img.name}</span></div>
+          <div class="status-dot-thumb" style="background:${STATUS_CFG[img.status].color}"></div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // ── Gallery ──────────────────────────────────────────────────
+  function renderGallery() {
+    const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+    let filtered = images.filter(img => {
+      if (filters.status !== 'alle' && img.status !== filters.status) return false;
+      if (filters.type !== 'alle' && img.type !== filters.type) return false;
+      if (filters.cat !== 'alle' && img.category !== filters.cat) return false;
+      if (q && !img.name.toLowerCase().includes(q) &&
+              !(img.notes||'').toLowerCase().includes(q) &&
+              !(img.category||'').toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    document.getElementById('results-count').textContent =
+      `${filtered.length} ${filtered.length === 1 ? 'Bild' : 'Bilder'} gefunden`;
+
+    const grid = document.getElementById('gallery-grid');
+    const empty = document.getElementById('gallery-empty');
+
+    if (filtered.length === 0) {
+      grid.style.display = 'none';
+      empty.style.display = '';
+    } else {
+      grid.style.display = 'grid';
+      empty.style.display = 'none';
+      grid.innerHTML = filtered.map(img => {
+        const sc = STATUS_CFG[img.status];
+        const tc = img.type ? TYPE_CFG[img.type] : null;
+        return `
+          <div class="gallery-card" onclick="openDetail('${img.id}')">
+            <div class="gallery-img">
+              <img src="${img.image}" alt="${img.name}" loading="lazy" />
+              <div class="img-badges">
+                <span class="badge-status" style="background:${sc.color}">${sc.label}</span>
+                ${tc ? `<span class="badge-type">${tc.emoji}</span>` : ''}
+              </div>
+            </div>
+            <div class="gallery-info">
+              <div class="gallery-name">${img.name}</div>
+              ${img.category ? `<div class="gallery-cat">🏷️ ${img.category}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  function setFilter(type, val, btn) {
+    if (!btn) return;
+    filters[type] = val;
+    const row = type === 'status' ? 'filter-status' : type === 'type' ? 'filter-type' : 'filter-cat';
+    document.querySelectorAll(`#${row} .filter-btn`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGallery();
+  }
+
+  function updateCatFilter() {
+    const cats = [...new Set(images.map(i => i.category).filter(Boolean))];
+    const wrap = document.getElementById('cat-filter-wrap');
+    const row = document.getElementById('filter-cat');
+    if (cats.length === 0) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    row.innerHTML = `<button class="filter-btn active" data-val="alle" onclick="setFilter('cat','alle',this)">Alle</button>` +
+      cats.map(c => `<button class="filter-btn" data-val="${c}" onclick="setFilter('cat','${c}',this)">${c}</button>`).join('');
+    const dl = document.getElementById('cat-list');
+    dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+  }
+
+  // ── Add/Edit Modal ───────────────────────────────────────────
+  function openAddModal() {
+    formData = { image: null, type: null, editing: null };
+    document.getElementById('form-name').value = '';
+    document.getElementById('form-category').value = '';
+    document.getElementById('form-notes').value = '';
+    document.getElementById('upload-area').style.display = 'flex';
+    document.getElementById('preview-area').style.display = 'none';
+    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('modal-title').textContent = 'Neues Bild';
+    document.getElementById('btn-save-text').textContent = 'Bild speichern';
+    document.getElementById('add-modal').classList.add('open');
+  }
+
+  function closeAddModal() {
+    document.getElementById('add-modal').classList.remove('open');
+  }
+
+  function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      formData.image = reader.result;
+      document.getElementById('preview-img').src = reader.result;
+      document.getElementById('upload-area').style.display = 'none';
+      document.getElementById('preview-area').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeImage() {
+    formData.image = null;
+    document.getElementById('upload-area').style.display = 'flex';
+    document.getElementById('preview-area').style.display = 'none';
+    document.getElementById('file-input').value = '';
+  }
+
+  function selectType(t) {
+    formData.type = formData.type === t ? null : t;
+    document.querySelectorAll('.option-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.type === formData.type);
+    });
+  }
+
+  function saveImage() {
+    const name = document.getElementById('form-name').value.trim();
+    if (!formData.image) { showToast('Bitte Bild hochladen!'); return; }
+    if (!name) { showToast('Bitte einen Namen eingeben!'); return; }
+
+    const id = formData.editing ? formData.editing.id : 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+    const data = {
+      id,
+      image: formData.image,
+      name,
+      status: formData.editing ? formData.editing.status : 'verfuegbar',
+      type: formData.type || null,
+      category: document.getElementById('form-category').value.trim(),
+      notes: document.getElementById('form-notes').value.trim(),
+      createdAt: formData.editing ? formData.editing.createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (!saveToStorage(id, data)) {
+      showToast('Fehler beim Speichern. Speicher voll?'); return;
+    }
+
+    images = loadFromStorage();
+    renderDashboard();
+    renderGallery();
+    updateCatFilter();
+    closeAddModal();
+    showToast(formData.editing ? '✅ Gespeichert!' : '✅ Bild hinzugefügt!');
+  }
+
+  // ── Detail Modal ─────────────────────────────────────────────
+  function openDetail(id) {
+    const img = images.find(i => i.id === id);
+    if (!img) return;
+    currentDetailId = id;
+
+    document.getElementById('detail-name').textContent = img.name;
+    document.getElementById('detail-img').src = img.image;
+
+    // Status buttons
+    document.querySelectorAll('.status-btn').forEach(b => {
+      b.className = 'status-btn';
+      if (b.dataset.s === img.status) b.classList.add(STATUS_CFG[img.status].activeCls);
+    });
+
+    // Info
+    let infoHtml = `<div class="info-row"><span class="info-key">Status</span><span class="info-val">${STATUS_CFG[img.status].label}</span></div>`;
+    if (img.type) infoHtml += `<div class="info-row"><span class="info-key">Typ</span><span class="info-val">${TYPE_CFG[img.type].emoji} ${TYPE_CFG[img.type].label}</span></div>`;
+    if (img.category) infoHtml += `<div class="info-row"><span class="info-key">Kategorie</span><span class="info-val">${img.category}</span></div>`;
+    infoHtml += `<div class="info-row"><span class="info-key">Hinzugefügt</span><span class="info-val">${new Date(img.createdAt).toLocaleDateString('de-DE')}</span></div>`;
+    document.getElementById('detail-info').innerHTML = infoHtml;
+
+    if (img.notes) {
+      document.getElementById('detail-notes-wrap').style.display = '';
+      document.getElementById('detail-notes').textContent = img.notes;
+    } else {
+      document.getElementById('detail-notes-wrap').style.display = 'none';
+    }
+
+    document.getElementById('detail-modal').classList.add('open');
+  }
+
+  function closeDetail() {
+    document.getElementById('detail-modal').classList.remove('open');
+    currentDetailId = null;
+  }
+
+  function quickStatus(s) {
+    const img = images.find(i => i.id === currentDetailId);
+    if (!img) return;
+    img.status = s;
+    img.updatedAt = new Date().toISOString();
+    saveToStorage(img.id, img);
+    images = loadFromStorage();
+    renderDashboard();
+    renderGallery();
+    // Update buttons
+    document.querySelectorAll('.status-btn').forEach(b => {
+      b.className = 'status-btn';
+      if (b.dataset.s === s) b.classList.add(STATUS_CFG[s].activeCls);
+    });
+    document.querySelector(`#detail-info .info-row .info-val`).textContent = STATUS_CFG[s].label;
+    showToast('Status geändert: ' + STATUS_CFG[s].label);
+  }
+
+  function editCurrent() {
+    const img = images.find(i => i.id === currentDetailId);
+    if (!img) return;
+    closeDetail();
+    // Prefill form
+    formData = { image: img.image, type: img.type, editing: img };
+    document.getElementById('form-name').value = img.name;
+    document.getElementById('form-category').value = img.category || '';
+    document.getElementById('form-notes').value = img.notes || '';
+    document.getElementById('preview-img').src = img.image;
+    document.getElementById('upload-area').style.display = 'none';
+    document.getElementById('preview-area').style.display = 'block';
+    document.querySelectorAll('.option-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.type === img.type);
+    });
+    document.getElementById('modal-title').textContent = 'Bearbeiten';
+    document.getElementById('btn-save-text').textContent = 'Änderungen speichern';
+    document.getElementById('add-modal').classList.add('open');
+  }
+
+  function deleteCurrent() {
+    if (!confirm('Bild wirklich löschen?')) return;
+    deleteFromStorage(currentDetailId);
+    images = loadFromStorage();
+    renderDashboard();
+    renderGallery();
+    updateCatFilter();
+    closeDetail();
+    showToast('🗑️ Bild gelöscht');
+  }
+
+  // ── Toast ────────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── Close on backdrop click ──────────────────────────────────
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+        currentDetailId = null;
+      }
+    });
+  });
+
+  init();
+</script>
+</body>
+</html>
