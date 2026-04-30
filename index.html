@@ -759,23 +759,21 @@
     <div class="modal-body">
       <!-- Image Upload -->
       <div class="form-group">
-        <label class="form-label">Bild</label>
+        <label class="form-label">Bilder</label>
         <div id="upload-area" class="upload-area" onclick="document.getElementById('file-input').click()">
           <span>📤</span>
-          <span class="upload-text">Bild hochladen</span>
-          <span class="upload-hint">Aus deiner Galerie auswählen</span>
-          <input type="file" id="file-input" accept="image/*" onchange="handleUpload(event)" />
+          <span class="upload-text">Bilder hochladen</span>
+          <span class="upload-hint">Mehrere Bilder gleichzeitig auswählen</span>
+          <input type="file" id="file-input" accept="image/*" multiple onchange="handleUpload(event)" />
         </div>
-        <div id="preview-area" class="preview-container" style="display:none">
-          <img id="preview-img" src="" alt="Vorschau" />
-          <button class="btn-remove-img" onclick="removeImage()">✕</button>
-        </div>
+        <div id="preview-grid" style="display:none; display:none; grid-template-columns: repeat(3,1fr); gap:8px; margin-top:8px;"></div>
       </div>
 
-      <!-- Name -->
-      <div class="form-group">
-        <label class="form-label">Name *</label>
+      <!-- Batch name prefix -->
+      <div class="form-group" id="name-group">
+        <label class="form-label">Name <span style="color:var(--text-muted);font-size:10px" id="name-hint">(bei mehreren Bildern: Prefix)</span></label>
         <input type="text" id="form-name" class="form-input" placeholder="z.B. Aria Café Morning" />
+        <div id="name-preview-hint" style="font-size:11px;color:var(--text-muted);margin-top:5px;display:none"></div>
       </div>
 
       <!-- Type -->
@@ -796,7 +794,7 @@
 
       <!-- Category -->
       <div class="form-group">
-        <label class="form-label">Kategorie <span style="color:var(--text-muted);font-size:10px">(optional)</span></label>
+        <label class="form-label">Kategorie <span style="color:var(--text-muted);font-size:10px">(optional, gilt für alle)</span></label>
         <input type="text" id="form-category" class="form-input" placeholder="z.B. Café, Travel, Skincare..." list="cat-list" />
         <datalist id="cat-list"></datalist>
       </div>
@@ -1012,15 +1010,18 @@
 
   // ── Add/Edit Modal ───────────────────────────────────────────
   function openAddModal() {
-    formData = { image: null, type: null, editing: null };
+    formData = { images: [], type: null, editing: null };
     document.getElementById('form-name').value = '';
     document.getElementById('form-category').value = '';
     document.getElementById('form-notes').value = '';
     document.getElementById('upload-area').style.display = 'flex';
-    document.getElementById('preview-area').style.display = 'none';
+    const pg = document.getElementById('preview-grid');
+    pg.innerHTML = ''; pg.style.display = 'none';
+    document.getElementById('name-hint').style.display = '';
+    document.getElementById('name-preview-hint').style.display = 'none';
     document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-    document.getElementById('modal-title').textContent = 'Neues Bild';
-    document.getElementById('btn-save-text').textContent = 'Bild speichern';
+    document.getElementById('modal-title').textContent = 'Neue Bilder';
+    document.getElementById('btn-save-text').textContent = 'Bilder speichern';
     document.getElementById('add-modal').classList.add('open');
   }
 
@@ -1029,23 +1030,67 @@
   }
 
   function handleUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      formData.image = reader.result;
-      document.getElementById('preview-img').src = reader.result;
-      document.getElementById('upload-area').style.display = 'none';
-      document.getElementById('preview-area').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    formData.images = [];
+
+    const pg = document.getElementById('preview-grid');
+    pg.innerHTML = '';
+    pg.style.display = 'grid';
+    document.getElementById('upload-area').style.display = 'none';
+
+    let loaded = 0;
+    files.forEach((file, idx) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        formData.images[idx] = reader.result;
+        loaded++;
+
+        // Thumbnail
+        const thumb = document.createElement('div');
+        thumb.style.cssText = 'position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;';
+        thumb.innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;object-fit:cover;" />
+          <button onclick="removeSingleImage(${idx})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+        pg.appendChild(thumb);
+
+        if (loaded === files.length) {
+          updateNameHint();
+          document.getElementById('btn-save-text').textContent = `${loaded} Bild${loaded > 1 ? 'er' : ''} speichern`;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
   }
 
-  function removeImage() {
-    formData.image = null;
-    document.getElementById('upload-area').style.display = 'flex';
-    document.getElementById('preview-area').style.display = 'none';
-    document.getElementById('file-input').value = '';
+  function removeSingleImage(idx) {
+    formData.images[idx] = null;
+    const pg = document.getElementById('preview-grid');
+    const thumbs = pg.children;
+    if (thumbs[idx]) thumbs[idx].style.opacity = '0.3';
+    const remaining = formData.images.filter(Boolean).length;
+    if (remaining === 0) {
+      pg.style.display = 'none';
+      document.getElementById('upload-area').style.display = 'flex';
+    }
+    document.getElementById('btn-save-text').textContent = `${remaining} Bild${remaining !== 1 ? 'er' : ''} speichern`;
+    updateNameHint();
+  }
+
+  function updateNameHint() {
+    const count = formData.images.filter(Boolean).length;
+    const hint = document.getElementById('name-preview-hint');
+    const nameHint = document.getElementById('name-hint');
+    if (count > 1) {
+      nameHint.style.display = '';
+      nameHint.textContent = '(Prefix für alle Bilder)';
+      const prefix = document.getElementById('form-name').value.trim() || 'Bild';
+      hint.style.display = '';
+      hint.textContent = `→ ${prefix} 1, ${prefix} 2, ... ${prefix} ${count}`;
+    } else {
+      nameHint.textContent = '';
+      hint.style.display = 'none';
+    }
   }
 
   function selectType(t) {
@@ -1056,33 +1101,47 @@
   }
 
   function saveImage() {
-    const name = document.getElementById('form-name').value.trim();
-    if (!formData.image) { showToast('Bitte Bild hochladen!'); return; }
-    if (!name) { showToast('Bitte einen Namen eingeben!'); return; }
+    const nameInput = document.getElementById('form-name').value.trim();
 
-    const id = formData.editing ? formData.editing.id : 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
-    const data = {
-      id,
-      image: formData.image,
-      name,
-      status: formData.editing ? formData.editing.status : 'verfuegbar',
-      type: formData.type || null,
-      category: document.getElementById('form-category').value.trim(),
-      notes: document.getElementById('form-notes').value.trim(),
-      createdAt: formData.editing ? formData.editing.createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (!saveToStorage(id, data)) {
-      showToast('Fehler beim Speichern. Speicher voll?'); return;
+    // EDIT MODE (single)
+    if (formData.editing) {
+      if (!nameInput) { showToast('Bitte einen Namen eingeben!'); return; }
+      const data = {
+        ...formData.editing,
+        image: formData.images[0] || formData.editing.image,
+        name: nameInput,
+        type: formData.type || null,
+        category: document.getElementById('form-category').value.trim(),
+        notes: document.getElementById('form-notes').value.trim(),
+        updatedAt: new Date().toISOString(),
+      };
+      saveToStorage(data.id, data);
+      images = loadFromStorage();
+      renderDashboard(); renderGallery(); updateCatFilter();
+      closeAddModal();
+      showToast('✅ Gespeichert!');
+      return;
     }
 
+    // BATCH MODE
+    const validImages = formData.images.filter(Boolean);
+    if (validImages.length === 0) { showToast('Bitte Bilder hochladen!'); return; }
+    if (!nameInput) { showToast('Bitte einen Namen eingeben!'); return; }
+
+    const category = document.getElementById('form-category').value.trim();
+    const notes = document.getElementById('form-notes').value.trim();
+    const now = new Date().toISOString();
+
+    validImages.forEach((img, idx) => {
+      const name = validImages.length === 1 ? nameInput : `${nameInput} ${idx + 1}`;
+      const id = 'img_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substr(2,4);
+      saveToStorage(id, { id, image: img, name, status: 'verfuegbar', type: formData.type || null, category, notes, createdAt: now, updatedAt: now });
+    });
+
     images = loadFromStorage();
-    renderDashboard();
-    renderGallery();
-    updateCatFilter();
+    renderDashboard(); renderGallery(); updateCatFilter();
     closeAddModal();
-    showToast(formData.editing ? '✅ Gespeichert!' : '✅ Bild hinzugefügt!');
+    showToast(`✅ ${validImages.length} Bild${validImages.length > 1 ? 'er' : ''} gespeichert!`);
   }
 
   // ── Detail Modal ─────────────────────────────────────────────
@@ -1144,14 +1203,17 @@
     const img = images.find(i => i.id === currentDetailId);
     if (!img) return;
     closeDetail();
-    // Prefill form
-    formData = { image: img.image, type: img.type, editing: img };
+    formData = { images: [img.image], type: img.type, editing: img };
     document.getElementById('form-name').value = img.name;
     document.getElementById('form-category').value = img.category || '';
     document.getElementById('form-notes').value = img.notes || '';
-    document.getElementById('preview-img').src = img.image;
+    // Show preview
+    const pg = document.getElementById('preview-grid');
+    pg.innerHTML = `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;"><img src="${img.image}" style="width:100%;height:100%;object-fit:cover;" /></div>`;
+    pg.style.display = 'grid';
     document.getElementById('upload-area').style.display = 'none';
-    document.getElementById('preview-area').style.display = 'block';
+    document.getElementById('name-hint').textContent = '';
+    document.getElementById('name-preview-hint').style.display = 'none';
     document.querySelectorAll('.option-btn').forEach(b => {
       b.classList.toggle('selected', b.dataset.type === img.type);
     });
