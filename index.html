@@ -1029,37 +1029,59 @@
     document.getElementById('add-modal').classList.remove('open');
   }
 
-  function handleUpload(e) {
+  function compressImage(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX = 800;
+          let w = img.width, h = img.height;
+          if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+          else if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleUpload(e) {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    formData.images = [];
+    formData.images = new Array(files.length).fill(null);
 
     const pg = document.getElementById('preview-grid');
     pg.innerHTML = '';
     pg.style.display = 'grid';
     document.getElementById('upload-area').style.display = 'none';
+    document.getElementById('btn-save-text').textContent = '⏳ Wird komprimiert...';
 
-    let loaded = 0;
-    files.forEach((file, idx) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        formData.images[idx] = reader.result;
-        loaded++;
-
-        // Thumbnail
-        const thumb = document.createElement('div');
-        thumb.style.cssText = 'position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;';
-        thumb.innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;object-fit:cover;" />
-          <button onclick="removeSingleImage(${idx})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
-        pg.appendChild(thumb);
-
-        if (loaded === files.length) {
-          updateNameHint();
-          document.getElementById('btn-save-text').textContent = `${loaded} Bild${loaded > 1 ? 'er' : ''} speichern`;
-        }
-      };
-      reader.readAsDataURL(file);
+    files.forEach((_, idx) => {
+      const thumb = document.createElement('div');
+      thumb.id = 'thumb-' + idx;
+      thumb.style.cssText = 'position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#f0ede8;display:flex;align-items:center;justify-content:center;';
+      thumb.innerHTML = '<span style="font-size:22px">⏳</span>';
+      pg.appendChild(thumb);
     });
+
+    for (let idx = 0; idx < files.length; idx++) {
+      const compressed = await compressImage(files[idx]);
+      formData.images[idx] = compressed;
+      const thumb = document.getElementById('thumb-' + idx);
+      if (thumb) {
+        thumb.innerHTML = `<img src="${compressed}" style="width:100%;height:100%;object-fit:cover;" />
+          <button onclick="removeSingleImage(${idx})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+      }
+      document.getElementById('btn-save-text').textContent = `⏳ ${idx+1}/${files.length} komprimiert...`;
+    }
+
+    updateNameHint();
+    document.getElementById('btn-save-text').textContent = `${files.length} Bild${files.length > 1 ? 'er' : ''} speichern`;
     e.target.value = '';
   }
 
